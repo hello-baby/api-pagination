@@ -1,5 +1,8 @@
 module Cursor
   module PageScopeMethods
+
+    attr_accessor :cursor_column
+
     def per(num)
       if (n = num.to_i) <= 0
         self
@@ -11,11 +14,21 @@ module Cursor
     end
 
     def next_cursor
-      @_next_cursor ||= last.try!(:id)
+      @_next_cursor ||= type_coercion(last.try!(cursor_column))
     end
 
     def prev_cursor
-      @_prev_cursor ||= first.try!(:id)
+      @_prev_cursor ||= type_coercion(first.try!(cursor_column))
+    end
+
+    def type_coercion(value)
+      return if value.nil?
+      cursor_column_type = columns_hash[cursor_column.to_s].type
+      if cursor_column_type == :datetime || cursor_column_type == :date
+        value.iso8601
+      else
+        value
+      end
     end
 
     def next_url(request_url)
