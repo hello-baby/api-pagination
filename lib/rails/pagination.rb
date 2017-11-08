@@ -45,6 +45,7 @@ module Rails
       options[:before] = params[:before] if params.key?(:before)
       options[:after] = params[:after] if params.key?(:after)
       options[:per_page] ||= collection.default_per_page
+      options[:per_page].to_i!
 
       collection = collection.cursor_page(options)
 
