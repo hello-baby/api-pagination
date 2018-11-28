@@ -44,6 +44,7 @@ module Rails
 
       options[:before] = params[:before] if params.key?(:before)
       options[:after] = params[:after] if params.key?(:after)
+      options[:middle] = params[:middle] if params.key?(:middle)
       options[:per_page] ||= collection.default_per_page
       options[:per_page] = options[:per_page].to_i
 

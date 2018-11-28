@@ -193,7 +193,7 @@ if ApiPagination.config.paginator == :cursor
           it 'should work' do
             get :index_with_no_per_page, params: {foo: 2, count: 100}
 
-            expect(response.header['Per-Page']).to eq('2')
+            expect(response.header['Per-Page']).to eq(2)
           end
         end
 
@@ -211,7 +211,7 @@ if ApiPagination.config.paginator == :cursor
           it 'should work' do
             get :index_with_no_per_page, params: {foo: {bar: 2}, count: 100}
 
-            expect(response.header['Per-Page']).to eq('2')
+            expect(response.header['Per-Page']).to eq(2)
           end
         end
       end

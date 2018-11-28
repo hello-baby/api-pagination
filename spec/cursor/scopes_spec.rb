@@ -75,6 +75,14 @@ if ApiPagination.config.paginator == :cursor
             subject { model_class.order('id').cursor_page() }
             it { expect(subject.order_values.uniq).to eq ["#{model_class.table_name}.id DESC"] }
           end
+
+          context 'middle' do
+            subject { model_class.cursor_page(middle: 25) }
+            it { expect(subject.count).to eq(50) }
+            it { expect(subject.first.text).to eq('tweet001') }
+            it { expect(subject[25].text).to eq('tweet026') }
+            it { expect(subject.last.text).to eq('tweet050') }
+          end
         end
 
         describe '#per' do
@@ -110,6 +118,16 @@ if ApiPagination.config.paginator == :cursor
           context 'before middle page' do
             subject { model_class.cursor_page(before: 50) }
             it { expect(subject.next_cursor).to eq(25) }
+          end
+
+          context 'after middle' do
+            subject { model_class.cursor_page(middle: 25) }
+            it { expect(subject.next_cursor).to eq(50) }
+          end
+
+          context 'before middle' do
+            subject { model_class.cursor_page(middle: 25) }
+            it { expect(subject.prev_cursor).to eq(1) }
           end
 
         end
