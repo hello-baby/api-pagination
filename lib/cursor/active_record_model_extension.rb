@@ -31,10 +31,10 @@ module Cursor
 
         if direction == :middle
           left_result = on_cursor(cursor_id, :medium, column)
-            .in_direction(:before, sort_by)
+            .in_direction(:before, cursor)
             .limit((options[:per_page] || default_per_page) + 1)
           right_result = on_cursor(cursor_id, :after, column)
-            .in_direction(:after, sort_by)
+            .in_direction(:after, cursor)
             .limit(options[:per_page] || default_per_page)
           ids = left_result.pluck(:id) + right_result.pluck(:id)
           result = where(id: ids).in_direction(:after, sort_by).extending(Cursor::PageScopeMethods)
