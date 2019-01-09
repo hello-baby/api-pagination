@@ -37,6 +37,7 @@ if testing_cursor?
     create_table :tweets, force: true do |t|
       t.integer :n
       t.string :text
+      t.datetime :created_at
     end
   end
 

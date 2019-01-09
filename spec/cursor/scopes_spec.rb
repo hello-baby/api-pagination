@@ -18,7 +18,8 @@ if ApiPagination.config.paginator == :cursor
 
   describe Cursor::ActiveRecordExtension do
     before do
-      1.upto(100) {|i| Tweet.create!(n: i, text: "tweet#{'%03d' % i}")}
+      started_at = 1.day.ago
+      1.upto(100) {|i| Tweet.create!(n: i, text: "tweet#{'%03d' % i}", created_at: started_at + i.seconds)}
     end
 
     [Tweet].each do |model_class|
@@ -77,11 +78,40 @@ if ApiPagination.config.paginator == :cursor
           end
 
           context 'middle' do
-            subject { model_class.cursor_page(middle: 25) }
-            it { expect(subject.count).to eq(50) }
-            it { expect(subject.first.text).to eq('tweet001') }
-            it { expect(subject[25].text).to eq('tweet026') }
-            it { expect(subject.last.text).to eq('tweet050') }
+            before do
+              Tweet.delete_all
+              started_at = 1.day.ago
+              1.upto(50) {|i| Tweet.create!(id: i, text: "tweet#{'%03d' % i}", created_at: started_at + rand(30 + i).seconds)}
+              51.upto(100) {|i| Tweet.create!(id: i, text: "tweet#{'%03d' % i}", created_at: started_at - rand(30 + i).seconds)}
+            end
+
+            subject { model_class.cursor_page(middle: 15, cursor_column: :id, sort_by: :created_at, per_page: 5) }
+
+            xit 'debug' do
+              subject.each do |t|
+                puts "#{t.id} - #{t.created_at}"
+              end
+            end
+
+            it { expect(subject.count).to eq(5 + 1 + 5) }
+
+            it { expect(subject[5].id).to eq(15) }
+
+            it 'left tweets created_at less than middle tweet created_at' do
+              tweets = subject
+              middle_tweet = subject[5]
+              tweets[0..4].each do |t|
+                expect(t.created_at).to be < middle_tweet.created_at
+              end
+            end
+
+            it 'right tweets created_at greather than middle tweet created_at' do
+              tweets = subject
+              middle_tweet = subject[5]
+              tweets[6..10].each do |t|
+                expect(t.created_at).to be >= middle_tweet.created_at
+              end
+            end
           end
         end
 

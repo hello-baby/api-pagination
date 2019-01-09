@@ -30,14 +30,35 @@ module Cursor
         self.total_count = self.count
 
         if direction == :middle
-          left_result = on_cursor(cursor_id, :medium, column)
-            .in_direction(:before, column)
-            .limit((options[:per_page] || default_per_page) + 1)
-          right_result = on_cursor(cursor_id, :after, column)
-            .in_direction(:after, column)
-            .limit(options[:per_page] || default_per_page)
-          ids = left_result.pluck(:id) + right_result.pluck(:id)
-          result = where(id: ids).in_direction(:after, sort_by).extending(Cursor::PageScopeMethods)
+          if column.to_sym == :id
+            id = cursor_id
+            cursor_id = find(cursor_id).public_send(sort_by)
+            column = sort_by
+            left_result = on_cursor(cursor_id, :before, column)
+              .in_direction(:before, column)
+              .limit(options[:per_page] || default_per_page)
+            right_result = on_cursor(cursor_id, :medium, column)
+              .where.not(id: id)
+              .in_direction(:after, column)
+              .limit(options[:per_page] || default_per_page)
+            ids = left_result.pluck(:id).reverse + [id] + right_result.pluck(:id)
+
+            order_clause = 'CASE id '
+            ids.each_with_index do |id, index|
+              order_clause << sanitize_sql_array(['WHEN ? THEN ? ', id, index])
+            end
+            order_clause << sanitize_sql_array(['ELSE ? END', ids.length])
+            result = where(id: ids).order(Arel.sql(order_clause)).extending(Cursor::PageScopeMethods)
+          else
+            left_result = on_cursor(cursor_id, :before, column)
+              .in_direction(:before, column)
+              .limit(options[:per_page] || default_per_page)
+            right_result = on_cursor(cursor_id, :medium, column)
+              .in_direction(:after, column)
+              .limit((options[:per_page] || default_per_page) + 1)
+            ids = left_result.pluck(:id) + right_result.pluck(:id)
+            result = where(id: ids).in_direction(:after, sort_by).extending(Cursor::PageScopeMethods)
+          end
         else
           result = on_cursor(cursor_id, direction, column)
             .in_direction(direction, sort_by)
@@ -55,7 +76,7 @@ module Cursor
         else
           sign = case direction
                  when :medium
-                   '<='
+                   '>='
                  when :before
                    '<'
                  when :after
