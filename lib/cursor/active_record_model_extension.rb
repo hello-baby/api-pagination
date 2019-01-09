@@ -48,7 +48,7 @@ module Cursor
               order_clause << sanitize_sql_array(['WHEN ? THEN ? ', id, index])
             end
             order_clause << sanitize_sql_array(['ELSE ? END', ids.length])
-            result = where(id: ids).order(Arel.sql(order_clause)).extending(Cursor::PageScopeMethods)
+            result = where(id: ids).order(order_clause).extending(Cursor::PageScopeMethods)
           else
             left_result = on_cursor(cursor_id, :before, column)
               .in_direction(:before, column)
