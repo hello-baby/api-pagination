@@ -43,7 +43,7 @@ module Cursor
               .limit(options[:per_page] || default_per_page)
             ids = left_result.pluck(:id).reverse + [id] + right_result.pluck(:id)
 
-            order_clause = 'CASE id '
+            order_clause = "CASE #{table_name}.id "
             ids.each_with_index do |id, index|
               order_clause << sanitize_sql_array(['WHEN ? THEN ? ', id, index])
             end
